@@ -170,16 +170,26 @@ async def get_website(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
         context.chat_data['user_data']['WEBSITE'] = website
     
     # Google Sheets ga ma'lumotlarni saqlash
-    success = sheets_manager.save_client_data(context.chat_data['user_data'])
-    
-    if success:
+    try:
+        success = sheets_manager.save_client_data(context.chat_data['user_data'])
+        
+        if success:
+            await update.message.reply_text(
+                MESSAGES['success'],
+                reply_markup=ReplyKeyboardRemove()
+            )
+        else:
+            # Log qo'shish
+            print("Google Sheets ga saqlash muvaffaqiyatsiz bo'ldi")
+            await update.message.reply_text(
+                MESSAGES['error'],
+                reply_markup=ReplyKeyboardRemove()
+            )
+    except Exception as e:
+        # Xatolikni tushunish uchun qo'shimcha log
+        print(f"Ma'lumotlarni saqlashda tafsilotli xatolik: {e}")
         await update.message.reply_text(
-            MESSAGES['success'],
-            reply_markup=ReplyKeyboardRemove()
-        )
-    else:
-        await update.message.reply_text(
-            MESSAGES['error'],
+            f"{MESSAGES['error']} Xatolik: {str(e)[:100]}...",
             reply_markup=ReplyKeyboardRemove()
         )
     

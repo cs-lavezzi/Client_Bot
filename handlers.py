@@ -292,7 +292,7 @@ async def get_website(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
     if 'user_data' in context.chat_data:
         del context.chat_data['user_data']
     
-    return ConversationHandler.END # Ro'yxatdan o'tishni yakunlash uchun holatni qaytarish
+    return ConversationHandler.END #yuborilsa
     if update.message.text == '/skip':
         context.chat_data['user_data']['INSTAGRAM'] = ''
     else:

@@ -17,7 +17,6 @@ from handlers import (
     get_website,
     LANGUAGE, FIO, PHONE, PHOTO, SPHERE, JOB, TELEGRAM, INSTAGRAM, WEBSITE
 )
-
 # Logging ni sozlash
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',

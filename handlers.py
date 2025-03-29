@@ -10,14 +10,72 @@ LANGUAGE, FIO, PHONE, PHOTO, SPHERE, JOB, TELEGRAM, INSTAGRAM, WEBSITE = range(9
 # Google Sheets menejerini yaratish
 sheets_manager = SheetsManager()
 
+# Til tanlash uchun handler
+async def select_language(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Foydalanuvchiga til tanlash imkoniyatini berish"""
+    # Tugmalar yaratish
+    keyboard = [
+        [KeyboardButton('🇺🇿 O\'zbek tili'), KeyboardButton('🇷🇺 Русский язык')]
+    ]
+    reply_markup = ReplyKeyboardMarkup(keyboard, one_time_keyboard=True, resize_keyboard=True)
+    
+    # Standart tilni o'rnatish (default: 'uz')
+    if 'language' not in context.user_data:
+        context.user_data['language'] = 'uz'
+    
+    # Til tanlash xabarini yuborish
+    await update.message.reply_text(
+        MESSAGES[context.user_data['language']]['select_language'],
+        reply_markup=reply_markup
+    )
+    return LANGUAGE
+
+async def set_language(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Foydalanuvchi tilini saqlash"""
+    text = update.message.text
+    
+    # Tugma bosilgan matniga qarab tilni aniqlash
+    if '🇺🇿' in text or 'zbek' in text:
+        context.user_data['language'] = 'uz'
+    elif '🇷🇺' in text or 'усск' in text:
+        context.user_data['language'] = 'ru'
+    else:
+        # Agar til aniqlash imkoni bo'lmasa, o'zbek tili bilan davom etish
+        context.user_data['language'] = 'uz'
+    
+    lang = context.user_data['language']
+    
+    # Ro'yxatdan o'tish boshlanishi haqida xabar
+    await update.message.reply_text(
+        MESSAGES[lang]['register'],
+        reply_markup=ReplyKeyboardRemove()
+    )
+    
+    # FIO so'rash
+    await update.message.reply_text(REGISTRATION_STEPS[lang]['FIO'])
+    return FIO
+
 # Boshlang'ich buyruqlar uchun handlerlar
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Botni boshlash buyrug'i uchun handler"""
-    await update.message.reply_text(MESSAGES['start'])
+    # Standart tilni o'rnatish (default: 'uz')
+    if 'language' not in context.user_data:
+        context.user_data['language'] = 'uz'
+    
+    # Start xabarini yuborish
+    await update.message.reply_text(MESSAGES[context.user_data['language']]['start'])
+    
+    # Til tanlash funksiyasiga o'tish
+    return await select_language(update, context)
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Yordam buyrug'i uchun handler"""
-    await update.message.reply_text(MESSAGES['help'])
+    # Agar til tanlanmagan bo'lsa, standart tilni o'rnatish
+    if 'language' not in context.user_data:
+        context.user_data['language'] = 'uz'
+    
+    lang = context.user_data['language']
+    await update.message.reply_text(MESSAGES[lang]['help'])
 
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Ro'yxatdan o'tishni bekor qilish uchun handler"""
@@ -25,8 +83,14 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     if 'user_data' in context.chat_data:
         del context.chat_data['user_data']
     
+    # Agar til tanlanmagan bo'lsa, standart tilni o'rnatish
+    if 'language' not in context.user_data:
+        context.user_data['language'] = 'uz'
+    
+    lang = context.user_data['language']
+    
     await update.message.reply_text(
-        MESSAGES['cancel'], 
+        MESSAGES[lang]['cancel'], 
         reply_markup=ReplyKeyboardRemove()
     )
     return ConversationHandler.END
@@ -37,22 +101,26 @@ async def register(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     # Yangi foydalanuvchi ma'lumotlarini saqlash uchun lug'at
     context.chat_data['user_data'] = {}
     
-    await update.message.reply_text(
-        MESSAGES['register'],
-        reply_markup=ReplyKeyboardRemove()
-    )
+    # Agar til tanlanmagan bo'lsa, standart tilni o'rnatish
+    if 'language' not in context.user_data:
+        context.user_data['language'] = 'uz'
     
-    # FIO so'rash
-    await update.message.reply_text(REGISTRATION_STEPS['FIO'])
-    return FIO
+    # Til tanlash funksiyasiga o'tish
+    return await select_language(update, context)
 
 async def get_fio(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """FIO ni olish va telefon raqamni so'rash"""
     # FIO ni saqlash
     context.chat_data['user_data']['FIO'] = update.message.text
     
+    # Agar til tanlanmagan bo'lsa, standart tilni o'rnatish
+    if 'language' not in context.user_data:
+        context.user_data['language'] = 'uz'
+        
+    lang = context.user_data['language']
+    
     # Telefon raqamni so'rash
-    await update.message.reply_text(REGISTRATION_STEPS['PHONE'])
+    await update.message.reply_text(REGISTRATION_STEPS[lang]['PHONE'])
     return PHONE
 
 async def get_phone(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:

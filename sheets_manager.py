@@ -3,45 +3,38 @@ from oauth2client.service_account import ServiceAccountCredentials
 import datetime
 from config import CREDENTIALS_FILE, SPREADSHEET_ID, WORKSHEET_NAME, COLUMNS
 
-def __init__(self):
-    # Google API kredential faylini tekshirish yoki yaratish
-    import os
-    import base64
-    import json
-    
-    credentials_env = os.getenv('GOOGLE_CREDENTIALS')
-    
-    if credentials_env and not os.path.exists(CREDENTIALS_FILE):
-        # Kredential ma'lumotlarini base64 dan dekodlash
-        credentials_json = base64.b64decode(credentials_env.encode('ascii')).decode('ascii')
         
-        # Faylga saqlash
-        with open(CREDENTIALS_FILE, 'w') as f:
-            f.write(credentials_json)
 
 class SheetsManager:
     def __init__(self):
         # Google Sheets API uchun zarur bo'lgan scope(doira)lar
         scope = ['https://spreadsheets.google.com/feeds',
-                 'https://www.googleapis.com/auth/drive']
+                'https://www.googleapis.com/auth/drive']
         
         # Kredentiallarni yuklab olish
         try:
+            # Heroku muhit o'zgaruvchisidan kredentialni tekshirish
+            import os
+            import base64
+            import json
+            
+            credentials_env = os.getenv('GOOGLE_CREDENTIALS')
+            
+            if credentials_env and not os.path.exists(CREDENTIALS_FILE):
+                # Kredential ma'lumotlarini base64 dan dekodlash
+                try:
+                    credentials_json = base64.b64decode(credentials_env).decode('utf-8')
+                    
+                    # Faylga saqlash
+                    with open(CREDENTIALS_FILE, 'w') as f:
+                        f.write(credentials_json)
+                    print(f"Credentials.json fayli muhit o'zgaruvchisidan yaratildi")
+                except Exception as e:
+                    print(f"Kredentialni dekodlashda xatolik: {e}")
+            
             credentials = ServiceAccountCredentials.from_json_keyfile_name(CREDENTIALS_FILE, scope)
             self.client = gspread.authorize(credentials)
-            
-            # Google Sheets jadvaliga ulanish
-            self.spreadsheet = self.client.open_by_key(SPREADSHEET_ID)
-            
-            # Ish varaqni olish yoki yaratish
-            try:
-                self.worksheet = self.spreadsheet.worksheet(WORKSHEET_NAME)
-            except gspread.exceptions.WorksheetNotFound:
-                self.worksheet = self.spreadsheet.add_worksheet(title=WORKSHEET_NAME, rows=1000, cols=20)
-                # Jadval sarlavhalarini qo'shish
-                self.worksheet.append_row(COLUMNS)
-                
-            print("Google Sheets ulandi!")
+
         except Exception as e:
             print(f"Google Sheets ulanishida xatolik: {e}")
             raise

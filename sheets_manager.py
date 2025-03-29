@@ -3,6 +3,22 @@ from oauth2client.service_account import ServiceAccountCredentials
 import datetime
 from config import CREDENTIALS_FILE, SPREADSHEET_ID, WORKSHEET_NAME, COLUMNS
 
+def __init__(self):
+    # Google API kredential faylini tekshirish yoki yaratish
+    import os
+    import base64
+    import json
+    
+    credentials_env = os.getenv('GOOGLE_CREDENTIALS')
+    
+    if credentials_env and not os.path.exists(CREDENTIALS_FILE):
+        # Kredential ma'lumotlarini base64 dan dekodlash
+        credentials_json = base64.b64decode(credentials_env.encode('ascii')).decode('ascii')
+        
+        # Faylga saqlash
+        with open(CREDENTIALS_FILE, 'w') as f:
+            f.write(credentials_json)
+
 class SheetsManager:
     def __init__(self):
         # Google Sheets API uchun zarur bo'lgan scope(doira)lar

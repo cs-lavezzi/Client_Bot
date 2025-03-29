@@ -45,6 +45,10 @@ async def set_language(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
     
     lang = context.user_data['language']
     
+    # Agar user_data mavjud bo'lmasa, yangi lug'at yaratish
+    if 'user_data' not in context.chat_data:
+        context.chat_data['user_data'] = {}
+    
     # Ro'yxatdan o'tish boshlanishi haqida xabar
     await update.message.reply_text(
         MESSAGES[lang]['register'],
@@ -110,6 +114,10 @@ async def register(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 
 async def get_fio(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """FIO ni olish va telefon raqamni so'rash"""
+    # Agar user_data mavjud bo'lmasa, yangi lug'at yaratish
+    if 'user_data' not in context.chat_data:
+        context.chat_data['user_data'] = {}
+    
     # FIO ni saqlash
     context.chat_data['user_data']['FIO'] = update.message.text
     

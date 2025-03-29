@@ -222,6 +222,22 @@ async def get_photo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     await update.message.reply_text(REGISTRATION_STEPS[lang]['SPHERE'])
     return SPHERE
 
+async def get_sphere(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Faoliyat sohasini olish va kasbni so'rash"""
+    # Til olish
+    lang = context.user_data.get('language', 'uz')
+    
+    # Faoliyat sohasini saqlash
+    context.chat_data['user_data']['SPHERE'] = update.message.text
+    
+    # Kasbni so'rash
+    reply_keyboard = [['/skip']]
+    await update.message.reply_text(
+        REGISTRATION_STEPS[lang]['JOB'],
+        reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True, resize_keyboard=True)
+    )
+    return JOB
+
 async def get_job(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Kasbni olish va Telegram usernameni so'rash"""
     # Til olish

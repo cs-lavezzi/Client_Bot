@@ -83,31 +83,36 @@ def upload_to_google_drive(file_path, file_name, mime_type=None):
 async def save_photo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> str:
     """
     Foydalanuvchi yuborgan fotoni Google Drive'ga saqlash va URL qaytarish
-    
-    Args:
-        update (Update): Telegram Update obyekti
-        context (ContextTypes.DEFAULT_TYPE): CallbackContext
-        
-    Returns:
-        str: Saqlangan fotoning URL manzili
     """
     try:
+        # Til olish
+        lang = context.user_data.get('language', 'uz')
+        
+        # Qabul qilinadigan MIME turlar
+        valid_mime_types = ['image/jpeg', 'image/png']
+        
         # Agar foto mavjud bo'lsa
         if update.message.photo:
             # Eng katta o'lchamdagi fotoni olish
             photo = update.message.photo[-1]
             file_id = photo.file_id
-            mime_type = 'image/jpeg'
+            mime_type = 'image/jpeg'  # Telegram photos are always JPEG
         # Agar fayl yuborilgan bo'lsa
         elif update.message.document:
             file_id = update.message.document.file_id
             mime_type = update.message.document.mime_type or 'application/octet-stream'
+            
+            # MIME turini tekshirish
+            if mime_type not in valid_mime_types:
+                error_msg = "Iltimos, faqat JPEG yoki PNG formatidagi rasm yuboring." if lang == 'uz' else "Пожалуйста, отправьте только изображение в формате JPEG или PNG."
+                await update.message.reply_text(error_msg)
+                return ""
         else:
             return ""
             
         # Faylni Telegram serveridan olish
         file = await context.bot.get_file(file_id)
-        file_extension = os.path.splitext(file.file_path)[1] if '.' in file.file_path else '.jpg'
+        file_extension = '.jpg' if mime_type == 'image/jpeg' else '.png'
         
         # Vaqtinchalik fayl yaratish
         with tempfile.NamedTemporaryFile(suffix=file_extension, delete=False) as temp_file:
@@ -135,7 +140,7 @@ async def save_photo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> str:
     except Exception as e:
         print(f"Fotoni saqlashda xatolik: {e}")
         return ""
-
+    
 def validate_phone(phone_number: str) -> bool:
     """
     Telefon raqamni tekshirish

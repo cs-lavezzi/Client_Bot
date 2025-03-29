@@ -20,9 +20,9 @@ class SheetsManager:
             
             credentials_env = os.getenv('GOOGLE_CREDENTIALS')
             
-            if credentials_env and not os.path.exists(CREDENTIALS_FILE):
-                # Kredential ma'lumotlarini base64 dan dekodlash
+            if credentials_env:
                 try:
+                    # Kredential ma'lumotlarini base64 dan dekodlash
                     credentials_json = base64.b64decode(credentials_env).decode('utf-8')
                     
                     # Faylga saqlash
@@ -32,9 +32,42 @@ class SheetsManager:
                 except Exception as e:
                     print(f"Kredentialni dekodlashda xatolik: {e}")
             
+            if not os.path.exists(CREDENTIALS_FILE):
+                print(f"XATOLIK: {CREDENTIALS_FILE} fayli mavjud emas!")
+                # Bu qatorni o'chirib tashlang yoki o'zgartiring, ishlamayotgan bo'lsa
+                # raise FileNotFoundError(f"{CREDENTIALS_FILE} fayli topilmadi")
+                return  # Bu yerga kelsa, kredensial fayl yo'q
+                
             credentials = ServiceAccountCredentials.from_json_keyfile_name(CREDENTIALS_FILE, scope)
             self.client = gspread.authorize(credentials)
-
+            
+            # Spreadsheet ID bo'sh emasligini tekshirish
+            if not SPREADSHEET_ID:
+                print("XATOLIK: SPREADSHEET_ID bo'sh!")
+                return  # Bu yerga kelsa, spreadsheet ID yo'q
+            
+            # Google Sheets jadvaliga ulanish
+            try:
+                self.spreadsheet = self.client.open_by_key(SPREADSHEET_ID)
+                print(f"Spreadsheet '{self.spreadsheet.title}' ga ulandi")
+            except gspread.exceptions.APIError as e:
+                print(f"Spreadsheet ochishda xatolik: {e}")
+                if "Requested entity was not found" in str(e):
+                    print("Bunday ID li jadval mavjud emas yoki service account uchun ruxsat yo'q")
+                return  # Bu yerga kelsa, jadvalni ocha olmadi
+            
+            # Ish varaqni olish yoki yaratish
+            try:
+                self.worksheet = self.spreadsheet.worksheet(WORKSHEET_NAME)
+                print(f"Ish varaq '{WORKSHEET_NAME}' topildi")
+            except gspread.exceptions.WorksheetNotFound:
+                print(f"Ish varaq '{WORKSHEET_NAME}' topilmadi, yangisini yaratilmoqda...")
+                self.worksheet = self.spreadsheet.add_worksheet(title=WORKSHEET_NAME, rows=1000, cols=20)
+                # Jadval sarlavhalarini qo'shish
+                self.worksheet.append_row(COLUMNS)
+                print(f"Yangi ish varaq '{WORKSHEET_NAME}' yaratildi va sarlavhalar qo'shildi")
+                
+            print("Google Sheets muvaffaqiyatli ulandi!")
         except Exception as e:
             print(f"Google Sheets ulanishida xatolik: {e}")
             raise

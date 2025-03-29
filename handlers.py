@@ -195,6 +195,17 @@ async def get_photo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     # Til olish
     lang = context.user_data.get('language', 'uz')
     
+    # Faqat JPG yoki PNG formatdagi rasmlarni qabul qilish
+    valid_mime_types = ['image/jpeg', 'image/png']
+    
+    # Agar fayl yuborilgan bo'lsa, uning MIME turini tekshirish
+    if update.message.document:
+        mime_type = update.message.document.mime_type
+        if mime_type not in valid_mime_types:
+            error_msg = "Iltimos, faqat JPEG yoki PNG formatidagi rasm yuboring." if lang == 'uz' else "Пожалуйста, отправьте только изображение в формате JPEG или PNG."
+            await update.message.reply_text(error_msg)
+            return PHOTO
+    
     # Fotoni saqlash
     photo_url = await save_photo(update, context)
     
@@ -210,22 +221,6 @@ async def get_photo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     # Faoliyat sohasini so'rash
     await update.message.reply_text(REGISTRATION_STEPS[lang]['SPHERE'])
     return SPHERE
-
-async def get_sphere(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Faoliyat sohasini olish va kasbni so'rash"""
-    # Til olish
-    lang = context.user_data.get('language', 'uz')
-    
-    # Faoliyat sohasini saqlash
-    context.chat_data['user_data']['SPHERE'] = update.message.text
-    
-    # Kasbni so'rash
-    reply_keyboard = [['/skip']]
-    await update.message.reply_text(
-        REGISTRATION_STEPS[lang]['JOB'],
-        reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True, resize_keyboard=True)
-    )
-    return JOB
 
 async def get_job(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Kasbni olish va Telegram usernameni so'rash"""

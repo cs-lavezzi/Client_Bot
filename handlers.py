@@ -1,11 +1,11 @@
-from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove
+from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove, KeyboardButton
 from telegram.ext import ContextTypes, ConversationHandler
 from config import MESSAGES, REGISTRATION_STEPS
 from utils import save_photo, validate_phone, validate_url
 from sheets_manager import SheetsManager
 
 # Ro'yxatdan o'tish bosqichlari uchun holatlar
-FIO, PHONE, PHOTO, SPHERE, JOB, TELEGRAM, INSTAGRAM, WEBSITE = range(8)
+LANGUAGE, FIO, PHONE, PHOTO, SPHERE, JOB, TELEGRAM, INSTAGRAM, WEBSITE = range(9)
 
 # Google Sheets menejerini yaratish
 sheets_manager = SheetsManager()
@@ -170,26 +170,16 @@ async def get_website(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
         context.chat_data['user_data']['WEBSITE'] = website
     
     # Google Sheets ga ma'lumotlarni saqlash
-    try:
-        success = sheets_manager.save_client_data(context.chat_data['user_data'])
-        
-        if success:
-            await update.message.reply_text(
-                MESSAGES['success'],
-                reply_markup=ReplyKeyboardRemove()
-            )
-        else:
-            # Log qo'shish
-            print("Google Sheets ga saqlash muvaffaqiyatsiz bo'ldi")
-            await update.message.reply_text(
-                MESSAGES['error'],
-                reply_markup=ReplyKeyboardRemove()
-            )
-    except Exception as e:
-        # Xatolikni tushunish uchun qo'shimcha log
-        print(f"Ma'lumotlarni saqlashda tafsilotli xatolik: {e}")
+    success = sheets_manager.save_client_data(context.chat_data['user_data'])
+    
+    if success:
         await update.message.reply_text(
-            f"{MESSAGES['error']} Xatolik: {str(e)[:100]}...",
+            MESSAGES['success'],
+            reply_markup=ReplyKeyboardRemove()
+        )
+    else:
+        await update.message.reply_text(
+            MESSAGES['error'],
             reply_markup=ReplyKeyboardRemove()
         )
     

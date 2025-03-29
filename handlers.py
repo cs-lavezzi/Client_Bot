@@ -127,49 +127,65 @@ async def get_phone(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Telefon raqamni olish va fotoni so'rash"""
     phone_number = update.message.text
     
+    # Til olish
+    lang = context.user_data.get('language', 'uz')
+    
     # Telefon raqamni tekshirish
     if not validate_phone(phone_number):
-        await update.message.reply_text("Noto'g'ri telefon raqam formati. Iltimos, qaytadan kiriting:")
+        # Tanlangan tilga qarab xatolik xabari
+        error_msg = "Noto'g'ri telefon raqam formati. Iltimos, qaytadan kiriting:" if lang == 'uz' else "Неверный формат номера телефона. Пожалуйста, введите еще раз:"
+        await update.message.reply_text(error_msg)
         return PHONE
     
     # Telefon raqamni saqlash
     context.chat_data['user_data']['PHONE'] = phone_number
     
     # Fotoni so'rash
-    await update.message.reply_text(REGISTRATION_STEPS['PHOTO'])
+    await update.message.reply_text(REGISTRATION_STEPS[lang]['PHOTO'])
     return PHOTO
 
 async def get_photo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Fotoni olish va faoliyat sohasini so'rash"""
+    # Til olish
+    lang = context.user_data.get('language', 'uz')
+    
     # Fotoni saqlash
     photo_url = await save_photo(update, context)
     
     if not photo_url:
-        await update.message.reply_text("Foto yuklashda xatolik yuz berdi. Iltimos, qaytadan yuboring:")
+        # Tanlangan tilga qarab xatolik xabari
+        error_msg = "Foto yuklashda xatolik yuz berdi. Iltimos, qaytadan yuboring:" if lang == 'uz' else "Произошла ошибка при загрузке фото. Пожалуйста, отправьте еще раз:"
+        await update.message.reply_text(error_msg)
         return PHOTO
     
     # Foto URL ni saqlash
     context.chat_data['user_data']['PHOTO'] = photo_url
     
     # Faoliyat sohasini so'rash
-    await update.message.reply_text(REGISTRATION_STEPS['SPHERE'])
+    await update.message.reply_text(REGISTRATION_STEPS[lang]['SPHERE'])
     return SPHERE
 
 async def get_sphere(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Faoliyat sohasini olish va kasbni so'rash"""
+    # Til olish
+    lang = context.user_data.get('language', 'uz')
+    
     # Faoliyat sohasini saqlash
     context.chat_data['user_data']['SPHERE'] = update.message.text
     
     # Kasbni so'rash
     reply_keyboard = [['/skip']]
     await update.message.reply_text(
-        REGISTRATION_STEPS['JOB'],
-        reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True)
+        REGISTRATION_STEPS[lang]['JOB'],
+        reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True, resize_keyboard=True)
     )
     return JOB
 
 async def get_job(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Kasbni olish va Telegram usernameni so'rash"""
+    # Til olish
+    lang = context.user_data.get('language', 'uz')
+    
     # Agar o'tkazib yuborilsa
     if update.message.text == '/skip':
         context.chat_data['user_data']['JOB'] = ''
@@ -180,13 +196,16 @@ async def get_job(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     # Telegram usernameni so'rash
     reply_keyboard = [['/skip']]
     await update.message.reply_text(
-        REGISTRATION_STEPS['TELEGRAM'],
-        reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True)
+        REGISTRATION_STEPS[lang]['TELEGRAM'],
+        reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True, resize_keyboard=True)
     )
     return TELEGRAM
 
 async def get_telegram(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Telegram usernameni olish va Instagram profilni so'rash"""
+    # Til olish
+    lang = context.user_data.get('language', 'uz')
+    
     # Agar o'tkazib yuborilsa
     if update.message.text == '/skip':
         context.chat_data['user_data']['TELEGRAM'] = ''
@@ -201,14 +220,79 @@ async def get_telegram(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
     # Instagram profilni so'rash
     reply_keyboard = [['/skip']]
     await update.message.reply_text(
-        REGISTRATION_STEPS['INSTAGRAM'],
-        reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True)
+        REGISTRATION_STEPS[lang]['INSTAGRAM'],
+        reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True, resize_keyboard=True)
     )
     return INSTAGRAM
 
 async def get_instagram(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Instagram profilni olish va veb-saytni so'rash"""
+    # Til olish
+    lang = context.user_data.get('language', 'uz')
+    
     # Agar o'tkazib yuborilsa
+    if update.message.text == '/skip':
+        context.chat_data['user_data']['INSTAGRAM'] = ''
+    else:
+        # Instagram profilni saqlash
+        context.chat_data['user_data']['INSTAGRAM'] = update.message.text
+    
+    # Veb-saytni so'rash
+    reply_keyboard = [['/skip']]
+    await update.message.reply_text(
+        REGISTRATION_STEPS[lang]['WEBSITE'],
+        reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True, resize_keyboard=True)
+    )
+    return WEBSITE
+
+async def get_website(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Veb-saytni olish va ro'yxatdan o'tishni yakunlash"""
+    # Til olish
+    lang = context.user_data.get('language', 'uz')
+    
+    # Agar o'tkazib yuborilsa
+    if update.message.text == '/skip':
+        context.chat_data['user_data']['WEBSITE'] = ''
+    else:
+        # Veb-saytni saqlash va formatni tekshirish
+        website = update.message.text
+        if not validate_url(website):
+            # Tanlangan tilga qarab xatolik xabari
+            error_msg = "Noto'g'ri URL format. Iltimos, qaytadan kiriting:" if lang == 'uz' else "Неверный формат URL. Пожалуйста, введите еще раз:"
+            await update.message.reply_text(error_msg)
+            return WEBSITE
+        
+        context.chat_data['user_data']['WEBSITE'] = website
+    
+    # Google Sheets ga ma'lumotlarni saqlash
+    try:
+        success = sheets_manager.save_client_data(context.chat_data['user_data'])
+        
+        if success:
+            await update.message.reply_text(
+                MESSAGES[lang]['success'],
+                reply_markup=ReplyKeyboardRemove()
+            )
+        else:
+            # Log qo'shish
+            print("Google Sheets ga saqlash muvaffaqiyatsiz bo'ldi")
+            await update.message.reply_text(
+                MESSAGES[lang]['error'],
+                reply_markup=ReplyKeyboardRemove()
+            )
+    except Exception as e:
+        # Xatolikni tushunish uchun qo'shimcha log
+        print(f"Ma'lumotlarni saqlashda tafsilotli xatolik: {e}")
+        await update.message.reply_text(
+            f"{MESSAGES[lang]['error']}",
+            reply_markup=ReplyKeyboardRemove()
+        )
+    
+    # Kontekst ma'lumotlarini tozalash
+    if 'user_data' in context.chat_data:
+        del context.chat_data['user_data']
+    
+    return ConversationHandler.END yuborilsa
     if update.message.text == '/skip':
         context.chat_data['user_data']['INSTAGRAM'] = ''
     else:

@@ -36,7 +36,10 @@ def main() -> None:
         states={
             LANGUAGE: [MessageHandler(filters.TEXT & ~filters.COMMAND, set_language)],
             FIO: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_fio)],
-            PHONE: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_phone)],
+            PHONE: [
+                MessageHandler(filters.CONTACT, get_phone),
+                MessageHandler(filters.TEXT & ~filters.COMMAND, get_phone),
+            ],
             PHOTO: [
                 MessageHandler(filters.PHOTO | filters.Document.IMAGE, get_photo)
             ],
@@ -55,7 +58,10 @@ def main() -> None:
         states={
             LANGUAGE: [MessageHandler(filters.TEXT & ~filters.COMMAND, set_language)],
             FIO: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_fio)],
-            PHONE: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_phone)],
+            PHONE: [
+                MessageHandler(filters.CONTACT, get_phone),
+                MessageHandler(filters.TEXT & ~filters.COMMAND, get_phone),
+            ],
             PHOTO: [
                 MessageHandler(filters.PHOTO | filters.Document.IMAGE, get_photo)
             ],

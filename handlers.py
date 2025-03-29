@@ -120,28 +120,66 @@ async def get_fio(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     lang = context.user_data['language']
     
     # Telefon raqamni so'rash
-    await update.message.reply_text(REGISTRATION_STEPS[lang]['PHONE'])
+    # Kontakt baham ko'rish tugmasini yaratish
+    contact_keyboard = KeyboardButton(
+        text="📱 Kontaktni baham ko'rish" if lang == 'uz' else "📱 Поделиться контактом", 
+        request_contact=True
+    )
+    
+    reply_markup = ReplyKeyboardMarkup(
+        [[contact_keyboard]], 
+        resize_keyboard=True,
+        one_time_keyboard=True
+    )
+    
+    # Telefon raqam so'rovi
+    message = REGISTRATION_STEPS[lang]['PHONE'] + "\n" + (
+        "Kontaktni baham ko'rish uchun quyidagi tugmani bosing yoki raqamni qo'lda kiriting:" if lang == 'uz' else 
+        "Нажмите кнопку ниже, чтобы поделиться контактом, или введите номер вручную:"
+    )
+    
+    await update.message.reply_text(message, reply_markup=reply_markup)
     return PHONE
 
 async def get_phone(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Telefon raqamni olish va fotoni so'rash"""
-    phone_number = update.message.text
-    
     # Til olish
     lang = context.user_data.get('language', 'uz')
+    
+    # Kontakt orqali kelgan telefon raqamini tekshirish
+    if update.message.contact:
+        phone_number = update.message.contact.phone_number
+    else:
+        phone_number = update.message.text
     
     # Telefon raqamni tekshirish
     if not validate_phone(phone_number):
         # Tanlangan tilga qarab xatolik xabari
         error_msg = "Noto'g'ri telefon raqam formati. Iltimos, qaytadan kiriting:" if lang == 'uz' else "Неверный формат номера телефона. Пожалуйста, введите еще раз:"
-        await update.message.reply_text(error_msg)
+        
+        # Kontakt baham ko'rish tugmasini qayta yaratish
+        contact_keyboard = KeyboardButton(
+            text="📱 Kontaktni baham ko'rish" if lang == 'uz' else "📱 Поделиться контактом", 
+            request_contact=True
+        )
+        
+        reply_markup = ReplyKeyboardMarkup(
+            [[contact_keyboard]], 
+            resize_keyboard=True,
+            one_time_keyboard=True
+        )
+        
+        await update.message.reply_text(error_msg, reply_markup=reply_markup)
         return PHONE
     
     # Telefon raqamni saqlash
     context.chat_data['user_data']['PHONE'] = phone_number
     
     # Fotoni so'rash
-    await update.message.reply_text(REGISTRATION_STEPS[lang]['PHOTO'])
+    await update.message.reply_text(
+        REGISTRATION_STEPS[lang]['PHOTO'],
+        reply_markup=ReplyKeyboardRemove()
+    )
     return PHOTO
 
 async def get_photo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:

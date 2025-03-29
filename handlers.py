@@ -292,7 +292,7 @@ async def get_website(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
     if 'user_data' in context.chat_data:
         del context.chat_data['user_data']
     
-    return ConversationHandler.END #yuborilsa
+    return ConversationHandler.END # Ro'yxatdan o'tishni yakunlash
     if update.message.text == '/skip':
         context.chat_data['user_data']['INSTAGRAM'] = ''
     else:
@@ -309,6 +309,9 @@ async def get_website(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
 
 async def get_website(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Veb-saytni olish va ro'yxatdan o'tishni yakunlash"""
+    # Til olish
+    lang = context.user_data.get('language', 'uz')
+    
     # Agar o'tkazib yuborilsa
     if update.message.text == '/skip':
         context.chat_data['user_data']['WEBSITE'] = ''
@@ -316,22 +319,34 @@ async def get_website(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
         # Veb-saytni saqlash va formatni tekshirish
         website = update.message.text
         if not validate_url(website):
-            await update.message.reply_text("Noto'g'ri URL format. Iltimos, qaytadan kiriting:")
+            # Tanlangan tilga qarab xatolik xabari
+            error_msg = "Noto'g'ri URL format. Iltimos, qaytadan kiriting:" if lang == 'uz' else "Неверный формат URL. Пожалуйста, введите еще раз:"
+            await update.message.reply_text(error_msg)
             return WEBSITE
         
         context.chat_data['user_data']['WEBSITE'] = website
     
     # Google Sheets ga ma'lumotlarni saqlash
-    success = sheets_manager.save_client_data(context.chat_data['user_data'])
-    
-    if success:
+    try:
+        success = sheets_manager.save_client_data(context.chat_data['user_data'])
+        
+        if success:
+            await update.message.reply_text(
+                MESSAGES[lang]['success'],
+                reply_markup=ReplyKeyboardRemove()
+            )
+        else:
+            # Log qo'shish
+            print("Google Sheets ga saqlash muvaffaqiyatsiz bo'ldi")
+            await update.message.reply_text(
+                MESSAGES[lang]['error'],
+                reply_markup=ReplyKeyboardRemove()
+            )
+    except Exception as e:
+        # Xatolikni tushunish uchun qo'shimcha log
+        print(f"Ma'lumotlarni saqlashda tafsilotli xatolik: {e}")
         await update.message.reply_text(
-            MESSAGES['success'],
-            reply_markup=ReplyKeyboardRemove()
-        )
-    else:
-        await update.message.reply_text(
-            MESSAGES['error'],
+            MESSAGES[lang]['error'],
             reply_markup=ReplyKeyboardRemove()
         )
     

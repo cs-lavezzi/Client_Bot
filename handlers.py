@@ -10,8 +10,21 @@ LANGUAGE, FIO, PHONE, PHOTO, SPHERE, JOB, TELEGRAM, INSTAGRAM, WEBSITE = range(9
 # Google Sheets menejerini yaratish
 sheets_manager = SheetsManager()
 
+# Asinxron emas, sinxron funksiyalarga o'zgartirish
+def start(update, context):
+    """Botni boshlash buyrug'i uchun handler"""
+    # Standart tilni o'rnatish (default: 'uz')
+    if 'language' not in context.user_data:
+        context.user_data['language'] = 'uz'
+    
+    # Start xabarini yuborish
+    update.message.reply_text(MESSAGES[context.user_data['language']]['start'])
+    
+    # Til tanlash funksiyasiga o'tish
+    return select_language(update, context)
+
 # Til tanlash uchun handler
-async def select_language(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+def select_language(update, context):
     """Foydalanuvchiga til tanlash imkoniyatini berish"""
     # Tugmalar yaratish
     keyboard = [
@@ -24,13 +37,14 @@ async def select_language(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         context.user_data['language'] = 'uz'
     
     # Til tanlash xabarini yuborish
-    await update.message.reply_text(
+    update.message.reply_text(
         MESSAGES[context.user_data['language']]['select_language'],
         reply_markup=reply_markup
     )
     return LANGUAGE
 
-async def set_language(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+
+def set_language(update, context):
     """Foydalanuvchi tilini saqlash"""
     text = update.message.text
     
@@ -50,27 +64,14 @@ async def set_language(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
         context.chat_data['user_data'] = {}
     
     # Ro'yxatdan o'tish boshlanishi haqida xabar
-    await update.message.reply_text(
+    update.message.reply_text(
         MESSAGES[lang]['register'],
         reply_markup=ReplyKeyboardRemove()
     )
     
     # FIO so'rash
-    await update.message.reply_text(REGISTRATION_STEPS[lang]['FIO'])
+    update.message.reply_text(REGISTRATION_STEPS[lang]['FIO'])
     return FIO
-
-# Boshlang'ich buyruqlar uchun handlerlar
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Botni boshlash buyrug'i uchun handler"""
-    # Standart tilni o'rnatish (default: 'uz')
-    if 'language' not in context.user_data:
-        context.user_data['language'] = 'uz'
-    
-    # Start xabarini yuborish
-    await update.message.reply_text(MESSAGES[context.user_data['language']]['start'])
-    
-    # Til tanlash funksiyasiga o'tish
-    return await select_language(update, context)
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Yordam buyrug'i uchun handler"""

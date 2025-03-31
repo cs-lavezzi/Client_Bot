@@ -80,7 +80,7 @@ def upload_to_google_drive(file_path, file_name, mime_type=None):
         print(f"Google Drive'ga yuklashda xatolik: {e}")
         return ""
 
-def save_photo(update, context):
+async def save_photo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> str:
     """
     Foydalanuvchi yuborgan fotoni Google Drive'ga saqlash va URL qaytarish
     """
@@ -104,19 +104,17 @@ def save_photo(update, context):
             
             # MIME turini tekshirish
             if mime_type not in valid_mime_types:
-                error_msg = "Iltimos, faqat JPEG yoki PNG formatidagi rasm yuboring." if lang == 'uz' else "Пожалуйста, отправьте только изображение в формате JPEG или PNG."
-                update.message.reply_text(error_msg)
                 return ""
         else:
             return ""
             
         # Faylni Telegram serveridan olish
-        file = context.bot.get_file(file_id)
+        file = await context.bot.get_file(file_id)
         file_extension = '.jpg' if mime_type == 'image/jpeg' else '.png'
         
         # Vaqtinchalik fayl yaratish
         with tempfile.NamedTemporaryFile(suffix=file_extension, delete=False) as temp_file:
-            file.download_to_drive(temp_file.name)
+            await file.download_to_drive(temp_file.name)
             
             # Foydalanuvchi ID va sanani fayl nomiga qo'shish
             user_id = update.effective_user.id
@@ -140,6 +138,7 @@ def save_photo(update, context):
     except Exception as e:
         print(f"Fotoni saqlashda xatolik: {e}")
         return ""
+    
     
 def validate_phone(phone_number: str) -> bool:
     """
